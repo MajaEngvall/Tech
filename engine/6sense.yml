@@ -1,0 +1,57 @@
+template: Hello, %s!
+
+defaultName: Stranger
+
+database:
+  # the name of your JDBC driver
+  driverClass: com.mysql.jdbc.Driver
+  # the username
+  user: sicsthsense
+  # the password
+  password: 6S3NLd2un76CrE3RJXs
+  # the JDBC URL
+  url: jdbc:mysql://localhost:3306/sicsth2
+
+server:
+#  softNofileLimit: 1000
+#  hardNofileLimit: 1000
+  applicationConnectors:
+    - type: http
+      port: 8080
+    - type: https
+      port: 8443
+      keyStorePath: sicsthsense.keystore
+      keyStorePassword: password
+      validateCerts: false
+# this requires the npn-boot library on the JVM's boot classpath
+#    - type: spdy3
+#      port: 8445
+#      keyStorePath: example.keystore
+#      keyStorePassword: example
+#      validateCerts: false
+  adminConnectors:
+    - type: http
+      port: 8081
+    - type: https
+      port: 8444
+      keyStorePath: sicsthsense.keystore
+      keyStorePassword: password
+      validateCerts: false
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.example.app: DEBUG
+
+    org.hibernate.SQL: ALL
+
+  appenders:
+    - type: console
+

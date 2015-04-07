@@ -1,0 +1,32 @@
+@(users: List[User], message: String="")
+@import helper._
+
+@layout("User Management", message, session) {
+<div class="row-fluid">
+    <!-- Docs nav
+    ================================================== -->
+	<div class="span2 bs-docs-sidebar">
+		<ul class="unstyled">
+		</ul>
+	  </div>
+
+  <div class="span9">
+		<!--Body content-->
+		<legend>User Management</legend>
+		<ul>
+			@for(user <- users){
+				<li><a href="/accounts/@user.username">@user.username</a></li>
+			}
+		</ul>
+		<br />
+
+			<legend>Swap User:</legend>
+				@helper.form(action = routes.Login.swapUser()) {
+					<input type="text" name="newUser" value="" placeholder="New Username"/>
+					<input type="submit" class="btn btn-primary" value="Swap" /><br/><br/>
+				}
+
+		<br /> <br />
+    </div>
+  </div>
+}

@@ -1,0 +1,40 @@
+@(streams : List[Stream], stream: Stream, myForm: Form[Stream], message: String="")
+
+@import helper._
+@streamPath=@{
+if(stream.file != null && stream.file.getPath() != null) {
+stream.file.getPath()
+} else {
+"ID: "+stream.id
+}
+}
+
+@streamParentPath=@{
+if(stream.file != null) {
+stream.file.getParentPath()
+} else {
+"/"
+}
+}
+
+@layout("Streams", message, session) {
+
+
+    <!-- Docs nav
+    ================================================== -->
+	<div class="row-fluid">
+		<div class="span2 bs-docs-sidebar">
+						<!--
+				<div id="vfileTree">
+					<ul class="unstyled"><li class=''><i class='icon-hdd hideRoot'></i> <span class='dirNode selectedFile' data-filepath=''>Drive</span>
+						<ul class="folderNodeUL">@Html(FileSystem.listHTMLFileSystem(Secured.getCurrentUser()))</ul>
+					</li></ul>
+				</div>
+						-->
+  	</div>
+	<div id="mainPane" class="span9">
+	@vstream.viewStreamMainDiv(streams, stream, myForm, message)
+  </div>
+</div>
+	
+}

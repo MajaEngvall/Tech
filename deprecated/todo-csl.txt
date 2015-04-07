@@ -1,0 +1,50 @@
+TODO-list for the CSL IoT workshop
+----------------------------------
+
+Architecture:
+* Have a publically available SicsthSense with a *static* IPv6 [Niclas]
+* Have a gogo6 RPL network [Joakim & Simon]
+
+SicsthSense:
+* CoAP polling and POST [Matthias]
+* accept POST [Simon] => done
+* expose streams through a RESTful interface [Simon] => done
+* nice graphs display (choice of the x scale) [Matthis] => done
+* simple aggregation? (average, sum, etc?) [Simon]
+* interactive RESTful interface (click on "POST /leds/red") [Simon] => done
+* acting a proxy, having labels for devices (e.g. sense.sics.se/users/simonduq/phone) [Simon] => done
+* enbygg-style control [Joakim]
+* spontaneous registration (prefix based) [Simon]
+* beautiful front-end!
+* triggers: POST, cosm, twitter, mail
+
+Contiki:
+* posting to Cosm and SicsthSense [Joakim]
+* examples for each platform we use (ipso-profile svn style) [all]
+  full list here (devices and sensors):
+	- sky
+	- z1
+	- ...
+* pre-programming motes for the lab [all]
+  full list here:
+	- power meters?
+	- H&D Wireless devices
+	- ...
+
+Scripting:
+* make a few scripting examples for getting samples triggering actuation
+  - simple RESTful program [Joakim]
+  - python & java examples [Joakim]
+  - ...
+* example for posting something from a computer
+  (local data, like CPU temp, light from webcam, or data from the web) [Joakim]
+
+Android:
+* Android app for submitting sensor data to SicsthSense [Matthias]
+* Android app for looking at data - plenty out there already... (for COSM at least)
+
+Texts for the lab:
+  - write a small tutorial for people to start-up the lab
+  - write a few "challenges" for people to complete
+  - what type of application would we like to create during the "lab"?
+  - presentation(s) [Simon & Joakim]

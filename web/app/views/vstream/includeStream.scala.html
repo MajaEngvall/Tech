@@ -1,0 +1,333 @@
+@(stream: Stream, displayHeader: Boolean =true, displayOverview: Boolean =true, displayPlot: Boolean =true, displayToolbar: Boolean =true, liveUpdate: Boolean=false)
+
+@WIN_5M() = {5*60*1000}
+@WIN_30M() = {30*60*1000}
+@WIN_1H() = {60*60*1000}
+@WIN_1D() = {24*60*60*1000}
+@WIN_1W() = {7*24*60*60*1000}
+@WIN_1M() = {30*24*60*60*1000}
+@WIN_1Y() = {365*24*60*60*1000}
+
+@helpMark(text: String, apiLocation: String="") = {
+<a href="@routes.Public.about()#@apiLocation" class="helptooltip" data-toggle="tooltip" title="@text"><i class="icon-question-sign"></i></a>
+}
+
+
+@if(stream!=null && stream.resource!=null) {
+<div id="streamblock@{stream.id}">
+
+@if(stream.hasData() && stream.canRead(Secured.getCurrentUser())) {
+<div class="stream_header_block @if(!displayHeader){hidden}">
+	<div id="streamtitle@{stream.id}" class="streamtitle">
+		<br />
+		@if(stream.file!=null && stream.file.getPath()!=null && stream.file.getPath()!="" ) {
+			Stream
+		} else { 
+			Unnamed Stream
+		}
+		<a href="@routes.Application.viewStream(stream.id)" data-toggle="tooltip" title="id : @{stream.id}">@if(stream.file != null) {@stream.file.getPath()} else {id: @{stream.id}}</a>
+		@if(stream.resource != null && stream.canWrite(Secured.getCurrentUser())) {
+			(from resource <a href="@routes.CtrlResource.getById(stream.resource.id)">@{stream.resource.label}</a>)
+		}
+		@if(stream.owner.username!=Secured.getCurrentUser().username) {
+		(owner: <a href="/accounts/@stream.owner.username">@stream.owner.username</a>)
+		}
+		@if(displayToolbar){
+		<span class="pull-right">@vstream.streamToolbar(stream, stream.canWrite(Secured.getCurrentUser()), false, stream.publicAccess || stream.publicSearch)</span>
+		}
+		</div>
+	</div>	
+@if(displayOverview || displayPlot){
+
+<!--
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+<script type="text/javascript">
+	var chart_data;
+	var dashboard;
+	var host = document.location.hostname;
+	chartLastGet["@{stream.id}"] = 1;
+	google.load('visualization', '1.1', {packages: ['corechart', 'controls']});
+  google.setOnLoadCallback(drawChart);
+      function drawChart() {
+				charts["@{stream.id}"] = new google.visualization.DataTable();
+        dashboard  = new google.visualization.Dashboard(document.getElementById('dashboard'));
+      
+         var control = new google.visualization.ControlWrapper({
+           'controlType': 'ChartRangeFilter',
+           'containerId': 'control',
+           'options': {
+             // Filter by the date axis.
+             'filterColumnIndex': 0,
+             'ui': {
+               'chartType': 'LineChart',
+               'chartOptions': { 'chartArea': {'width': '90%'}, 'hAxis': {'baselineColor': 'none'} },
+               // Display a single series that shows the closing value of the stock.  // Thus, this view has two columns: the date (axis) and the stock value (line series).
+               'chartView': { 'columns': [0, 1] },
+               // 1 day in milliseconds = 24 * 60 * 60 * 1000 = 86,400,000
+               'minRangeSize': 86400000
+             }
+           },
+           // Initial range: 2012-02-09 to 2012-03-20.
+           //'state': {'range': {'start': new Date(2012, 1, 9), 'end': new Date(2014, 5, 20)}}
+         });
+      
+         var chart = new google.visualization.ChartWrapper({
+           'chartType': 'LineChart',
+           'containerId': 'chart',
+           'options': {
+             // Use the same chart area width as the control for axis alignment.
+             'chartArea': {'height': '80%', 'width': '100%'},
+             'hAxis': {'slantedText': false},
+             'vAxis': {'viewWindow': {'min': 0, 'max': 10}},
+             'legend': {'position': 'none'}
+           },
+           // Convert the first column from 'date' to 'string'.
+           'view': {
+             'columns': [
+               {
+                 'calc': function(dataTable, rowIndex) {
+                   return dataTable.getFormattedValue(rowIndex, 0);
+                 },
+                 'type': 'string'
+               }, 1]
+           }
+         });
+         charts["@{stream.id}"].addColumn('datetime', 'Date');
+         charts["@{stream.id}"].addColumn('number', 'Stream');
+
+$.ajax({
+  dataType: "json",
+	url: "http://"+document.location.hostname+":8080@{stream.getHierarchy()}/data?limit=5&key=@{stream.getKey()}",
+	timeout: 3000,
+  success: function(d, textStatus, jqXHR) {
+		//console.log("Ajax:"+textStatus);
+		if (d) {
+			//console.log("got json!" +d);
+			$.each(d, function (i, item) {
+				console.log("add initial data point: "+item.timestamp+" value: "+item.value);
+				var date =new Date( item.timestamp);
+        charts["@{stream.id}"].addRow([date,item.value]);
+				//chartOptions["@{stream.id}"].series[0].data.push([item.timestamp,item.value]); 
+//				if (item.timestamp>chartLastGet["@{stream.id}"]) {chartLastGet["@{stream.id}"]=item.timestamp;}
+				//if (chartMinValue["@{stream.id}"]==null || item.value<chartMinValue["@{stream.id}"]) { chartOptions["@{stream.id}"].yAxis.min=item.value*0.99; }
+			});
+			
+			dashboard.draw(charts["@{stream.id}"]);
+			//console.log(options);
+//			$('#chart-@{stream.id}').highcharts('StockChart', chartOptions["@{stream.id}"]);
+		}
+	},
+	error: function(xhr, status, exception) {
+		var errorMessage = exception || xhr.statusText;
+		console.log("Got an AJAX JSON GETing "+ "http://"+document.location.hostname+":8080@{stream.getHierarchy()}/data?limit=500&@{stream.getKey()} error:"+errorMessage);
+		$('#chart-@{stream.id}').hide();
+	}
+});
+      
+					setInterval(function() {
+						var url = "http://"+document.location.hostname+":8080@{stream.getHierarchy()}/data?from="+chartLastGet["@{stream.id}"]+"&key=@{stream.getKey()}"
+						$.getJSON(url, function(update) {
+							if (update) {
+								console.log("Get: "+url);
+								$.each(update, function (i, item) {
+									console.log("add new data point: "+item.timestamp+" to Stream "+@{stream.id} + " value: "+item.value);
+									var date =new Date( item.timestamp);
+									charts["@{stream.id}"].addRow([date, item.value]);
+									if (item.timestamp>chartLastGet["@{stream.id}"]) {chartLastGet["@{stream.id}"]=item.timestamp;}
+								});
+							dashboard.draw(charts["@{stream.id}"]);
+							}
+						}) } , 30000);
+
+/*
+         // Create random stock values, just like it works in reality.
+         var open, close = 300;
+         var low, high;
+         for (var day = 1; day < 121; ++day) {
+           var change = (Math.sin(day / 2.5 + Math.PI) + Math.sin(day / 3) - Math.cos(day * 0.7)) * 150;
+           change = change >= 0 ? change + 10 : change - 10;
+           open = close;
+           close = Math.max(50, open + change);
+           low = Math.min(open, close) - (Math.cos(day * 1.7) + 1) * 15;
+           low = Math.max(0, low);
+           var date = new Date(2012, 0 ,day);
+           data.addRow([date, Math.round(low)]);
+         }
+  */    
+         dashboard.bind(control, chart);
+         dashboard.draw(charts["@{stream.id}"]);
+      }
+      
+
+
+</script>
+    <div id="dashboard">
+        <div id="chart" style='width: 900px; height: 200px;'></div>
+        <div id="control" style='width: 900px; height: 50px;'></div>
+	</div>
+	</br>
+
+	-->
+
+<div id="chart-@{stream.id}" style="height: 270px; min-width: 500px"></div>
+<script>
+	var host = document.location.hostname;
+	chartLastGet["@{stream.id}"] = 1;
+	chartMinValue["@{stream.id}"] = null;
+	var options = {
+		xAxis: { type:'datetime',ordinal: false},
+		yAxis: { min:null},
+		scrollbar : { enabled : false },
+		series: [{
+			name: "Stream "+@{stream.id},
+			data: [],
+			type : 'area',
+			shadow : false,
+			//enableMouseTracking : false,
+			marker : { enabled: true, radius: 2, states: { hover: { enabled: true } } },
+			fillColor : { linearGradient : { x1: 0, y1: 0, x2: 0, y2: 1 },
+				stops : [[0, 'rgba(76,120,230,0.3)'], [1, 'rgba(10,10,20,0.05)']] }
+		}],
+		chart: { 
+			renderTo: 'container',
+				events: {
+				@if(liveUpdate) {
+				load : function() {
+					// set up the updating of the chart each second
+					var series = this.series[0];
+					setInterval(function() {
+						var url = "http://"+host+":8080@{stream.getHierarchy()}/data?from="+chartLastGet["@{stream.id}"]+"&key=@{stream.getKey()}"
+						$.getJSON(url, function(update) {
+							if (update) {
+								//console.log("Get: "+url);
+								$.each(update, function (i, item) {
+									//console.log("add new data point: "+item.timestamp+" to Stream "+@{stream.id});
+									series.addPoint([item.timestamp, item.value]);
+									if (item.timestamp>chartLastGet["@{stream.id}"]) {chartLastGet["@{stream.id}"]=item.timestamp;}
+								});
+							}
+						}) } , 4000);
+				}
+				}
+			}
+		},
+		rangeSelector: {
+			buttons: [{
+				type: 'all',
+				text: 'All'
+			}, {
+				count: 1,
+				type: 'day',
+				text: '1D'
+			}, {
+				count: 1,
+				type: 'hour',
+				text: '1H'
+			}, {
+				count: 5,
+				type: 'minute',
+				text: '5M'
+			}],
+			inputEnabled: false,
+			selected: 1
+		}
+	};
+
+chartOptions["@{stream.id}"]=options;
+//console.log("first series");
+//console.log(chartOptions["@{stream.id}"].series);
+
+// Perform initial loading of the chart, note the time of GET
+$.ajax({
+  dataType: "json",
+	url: "http://"+host+":8080@{stream.getHierarchy()}/data?limit=500&key=@{stream.getKey()}",
+	timeout: 7000,
+  success: function(data, textStatus, jqXHR) {
+		//console.log("Ajax:"+textStatus);
+		if (data) {
+			//console.log("got json!" +data);
+			$.each(data, function (i, item) {
+				//console.log("add initial data point: "+item.timestamp);
+				chartOptions["@{stream.id}"].series[0].data.push([item.timestamp,item.value]); 
+				if (item.timestamp>chartLastGet["@{stream.id}"]) {chartLastGet["@{stream.id}"]=item.timestamp;}
+				//if (chartMinValue["@{stream.id}"]==null || item.value<chartMinValue["@{stream.id}"]) { chartOptions["@{stream.id}"].yAxis.min=item.value*0.99; }
+			});
+			
+			//console.log(options);
+			$('#chart-@{stream.id}').highcharts('StockChart', chartOptions["@{stream.id}"]);
+		}
+	},
+	error: function(xhr, status, exception) {
+		var errorMessage = exception || xhr.statusText;
+		console.log("Got an AJAX JSON GETing problem "+ "http://"+host+"8080@{stream.getHierarchy()}/data?limit=500&key=@{stream.getKey()} "+errorMessage);
+		$('#chart-@{stream.id}').hide();
+	}
+});
+</script>
+
+
+	}
+		@**Show key?**@
+		@if(stream.showKey(Secured.getCurrentUser())!=null) {
+		<div class="row-fluid controls controls-row">
+			<!--@if(stream.owner.id==Secured.getCurrentUser().id) {
+			<button class="span2 btn btn-danger btn-small streamRegenerateKey" id="streamRegenerateKey@{stream.id}" data-streamId="@{stream.id}" data-toggle="tooltip" title="Click to generate a new key if compromised"><i class="icon-refresh icon-white"></i> Regenerate key</button>
+			}	
+			<input class="span8" type="text" id="streamKey@{stream.id}" name="keyUrl" value="@sicsthSenseURL()@{routes.CtrlStream.postByKey(stream.showKey(Secured.getCurrentUser()))}" readonly="readonly">
+			-->
+			<label class="span2">API URL:</label>
+			<input class="span10" type="text" id="streamKey@{stream.id}" name="apiUrl" value="@sicsthSenseURL():8080@stream.getHierarchy()" readonly="readonly">
+				<div class="row-fluid controls controls-row">
+					<label class="span2" for="">Key @helpMark("The hash/URI used to identify this resource","keyHelp")</label>
+					<input class="span8" type="text" id="Key" name="key" value="@stream.getKey" readonly>
+					<button class="span2 btn btn-danger resourceRegenerateKey" id="resourceRegenerateKey" data-resourceId="" data-toggle="tooltip" title="Click to generate a new key if compromised"><i class="icon-refresh icon-white"></i> Regenerate</button>
+				</div>
+		</div>
+		}	
+
+} else { 
+	@if(displayHeader){
+		<div id="streamtitle@{stream.id}" class="streamtitle">
+			Stream 
+			@if( stream.canRead(Secured.getCurrentUser()) ) {
+			<a href="@routes.Application.viewStream(stream.id)">@if(stream.file != null) {@stream.file.getPath()} else {id: @{stream.id}}</a>
+			} else {
+			<span>@if(stream.file != null) {@stream.file.getPath()} else {id: @{stream.id}}</span>
+			}
+
+@*		@if(stream.owner.username!=Secured.getCurrentUser().username) {
+			owner: <a href="/accounts/@stream.owner.username">@stream.owner.username</a>
+		} *@
+
+			@if(displayToolbar){
+				<span class="pull-right">@vstream.streamToolbar(stream, stream.canWrite(Secured.getCurrentUser()), false, stream.publicAccess || stream.publicSearch)</span>
+			}
+		</div>
+		@**Show key?**@
+		@if(stream.showKey(Secured.getCurrentUser())!=null) {
+			<div class="row-fluid controls controls-row">
+			<!--
+			@if(stream.owner.id==Secured.getCurrentUser().id) {
+			<button class="span2 btn btn-danger btn-small streamRegenerateKey" id="streamRegenerateKey@{stream.id}" data-streamId="@{stream.id}"><i class="icon-refresh icon-white"></i> Regenerate key</button>
+			}	
+			<input class="span10" type="text" id="streamKey@{stream.id}" name="keyUrl" value="@sicsthSenseURL()@{routes.CtrlStream.postByKey(stream.showKey(Secured.getCurrentUser()))}" readonly="readonly">
+			-->
+			<label class="span2">API URL:</label>
+			<input class="span10" type="text" id="streamKey@{stream.id}" name="keyUrl" value="@sicsthSenseURL():8080@stream.getHierarchy()" readonly="readonly">
+		</div>
+				<div class="row-fluid controls controls-row">
+					<label class="span2" for="">Key @helpMark("The hash/URI used to identify this resource","keyHelp")</label>
+					<input class="span8" type="text" id="Key" name="key" value="@stream.getKey" readonly>
+					<button class="span2 btn btn-danger resourceRegenerateKey" id="resourceRegenerateKey" data-resourceId="" data-toggle="tooltip" title="Click to generate a new key if compromised"><i class="icon-refresh icon-white"></i> Regenerate</button>
+				</div>
+		}	
+		<div class="streamNoDataLine">
+		 <span style="color: #ddd; padding-left: 10px;">No data currently available.</span>
+		 <br /> <br />
+		</div>
+	}
+
+}
+	</div>
+}

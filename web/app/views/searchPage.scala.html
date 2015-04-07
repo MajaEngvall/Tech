@@ -1,0 +1,69 @@
+@(resources: List[Resource], streams: List[Stream], query: String, page:Integer=0, message: String="")
+
+@import helper._
+
+@layout("Search", message, session) {
+
+    <!-- Docs nav
+    ================================================== -->
+	<div class="row-fluid">
+		<div class="span2 bs-docs-sidebar">
+		<h4></h4>
+<div style="position:fixed;" >
+		<ul class="unstyled">
+			<!--			<li><span href="#" id="showHidePlotsButton" data-nextTitle="Show graphs" class="btn btn-lnk">Hide graphs</span></li>-->
+		</ul>
+	  </div>
+	  </div>
+
+  <div id="mainPane" class="span9">
+		<!--Body content-->
+		<!-- Stream listing and visualizing -->
+		@if((query!=null) && (query!="")) {
+		<Legend>Search results for "@query"</Legend>
+		} else {
+		<Legend>Streams</Legend>
+		}
+		<ul class="pager">
+			<lh><b>Page @{page}&nbsp;&nbsp;</b> </lh>
+			@if(page>0) {
+				<li><a href="/streams?p=@{page-1}">Previous</a></li>
+			} else {
+				<li><a>Previous</a></li>
+			}
+			@if(CtrlStream.listStreamsLength() <= (page+1)*CtrlStream.pageSize) {
+				<li><a>Next</a></li>
+			} else {
+				<li><a href="/streams?p=@{page+1}">Next</a></li>
+			}
+
+		</ul>
+	@if(streams.length > 0) {
+		@for(stream <- streams) {
+			@**vstream.includeStreamResult(stream)*@
+			@vstream.includeStream(stream)
+			<hr class="dashed" />
+		}
+		<br \>
+		<ul class="pager">
+			<lh><b>Page @{page}&nbsp;&nbsp;</b> </lh>
+			@if(page>0) {
+				<li><a href="/streams?p=@{page-1}">Previous</a></li>
+			} else {
+				<li><a>Previous</a></li>
+			}
+			@if(CtrlStream.listStreamsLength() <= (page+1)*CtrlStream.pageSize) {
+				<li><a>Next</a></li>
+			} else {
+				<li><a href="/streams?p=@{page+1}">Next</a></li>
+			}
+		</ul>
+
+	} else {
+			No matches available!<br /> <br /> View/add your own through the <a href="/resources">Resources page</a>.
+	}
+		<br /> <br />
+    </div>
+  </div>
+
+}

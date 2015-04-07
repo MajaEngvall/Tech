@@ -1,0 +1,68 @@
+@(message: String="")
+@import helper._
+
+@layout("Admin", message, session) {
+<div class="row-fluid">
+    <!-- Docs nav
+    ================================================== -->
+	<div class="span2 bs-docs-sidebar">
+		<h4></h4>
+		<ul class="unstyled">
+		</ul>
+	  </div>
+
+  <div id="mainPane" class="span9">
+		<!--Body content-->
+		<legend>Administrator's page</legend>
+
+		<ul>
+			<li>Instance domain name:<br />
+			<div class="row-fluid">
+				@helper.form(action = routes.Application.setDomain()) {
+				<input type="text" class="span5" name="domain" value="@controllers.Application.getDomain()" /> 
+				<input type="submit" class="span2 btn btn-primary" value="Update" />
+				}
+			</div>
+			</li>
+			<li><a href="/admin/usermgmt">User Management</a></li>
+
+			<li>OpenID Login:<br/>
+				@helper.form(action = routes.Application.setOpenIDLogin()) {
+				@if(controllers.Application.canOpenIDLogin()) {
+					<input type="radio" name="openidLogin" value="true" checked /> Enabled<br/>
+					<input type="radio" name="openidLogin" value="false"/> Disabled &nbsp;&nbsp;
+				}else{
+					<input type="radio" name="openidLogin" value="true" /> Enabled<br/>
+					<input type="radio" name="openidLogin" value="false" checked/> Disabled &nbsp;&nbsp;
+				}
+					<input type="submit" class="btn btn-primary" value="Update" />
+				}
+			</li>
+
+			<li>Username/password Login:<br/>
+				@helper.form(action = routes.Application.setPasswordLogin()) {
+				@if(controllers.Application.canPasswordLogin()) {
+					<input type="radio" name="passwordLogin" value="true" checked /> Enabled<br/>
+					<input type="radio" name="passwordLogin" value="false"/> Disabled &nbsp;&nbsp;
+				}else{
+					<input type="radio" name="passwordLogin" value="true" /> Enabled<br/>
+					<input type="radio" name="passwordLogin" value="false" checked /> Disabled &nbsp;&nbsp;
+				}
+					<input type="submit" class="btn btn-primary" value="Update" /><br/><br/>
+				}
+			</li>
+			<li>Swap User:<br/>
+				@helper.form(action = routes.Login.swapUser()) {
+					<input type="text" name="newUser" value="" placeholder="New Username"/>
+					<input type="submit" class="btn btn-primary" value="Swap" /><br/><br/>
+				}
+			<li>To be implemented:</li>
+			<li><a href="/admin/statistics">Statistics page</a></li>
+			<li><a href="/admin/reindex">Reindex Search Database</a></li>
+			<li><a href="/admin/backup">Backup Database</a></li>
+		</ul>
+
+		<br /> <br />
+    </div>
+  </div>
+}
